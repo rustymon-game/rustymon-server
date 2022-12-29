@@ -1,0 +1,3 @@
+[submodule "rustymon-world"]
+	path = rustymon-world
+	url = https://github.com/rustymon-game/rustymon-world.git

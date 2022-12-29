@@ -1,0 +1,76 @@
+[Migration]
+Hash = '13079256831866196346'
+Initial = true
+Replaces = []
+
+[[Migration.Operations]]
+Type = 'CreateModel'
+Name = 'tile'
+
+[[Migration.Operations.Fields]]
+Name = 'id'
+Type = 'int64'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'auto_increment'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'primary_key'
+
+[[Migration.Operations.Fields]]
+Name = 'min_x'
+Type = 'double_number'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Fields]]
+Name = 'max_x'
+Type = 'double_number'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Fields]]
+Name = 'min_y'
+Type = 'double_number'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Fields]]
+Name = 'max_y'
+Type = 'double_number'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations]]
+Type = 'CreateModel'
+Name = 'session'
+
+[[Migration.Operations.Fields]]
+Name = 'session_key'
+Type = 'varchar'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'max_length'
+Value = 4096
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'primary_key'
+
+[[Migration.Operations.Fields]]
+Name = 'session_state'
+Type = 'varchar'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'max_length'
+Value = 1048576
+
+[[Migration.Operations.Fields]]
+Name = 'expired_after'
+Type = 'datetime'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'

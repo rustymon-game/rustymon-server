@@ -3,5 +3,8 @@
 target/
 Cargo.lock
 
+.models.json
+osm_data/
 config.toml
 logs/
+database.toml

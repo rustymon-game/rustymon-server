@@ -1,3 +1,9 @@
+[workspace]
+members = [
+    ".",
+    "rustymon-world",
+]
+
 [package]
 name = "rustymon-server"
 version = "0.1.0"
@@ -14,6 +20,7 @@ log = { version = "~0.4" }
 
 # Async runtime
 tokio = { version = "~1.23", features = ["rt-multi-thread", "macros", "sync"] }
+futures = { version = "~0.3" }
 
 # ORM
 rorm = { version = "~0.4", features = ["tokio-rustls"] }
@@ -26,6 +33,9 @@ base64 = { version = "~0.20" }
 
 # CLI parser
 clap = { version = "~4.0", features = ["derive"] }
+
+# OSM parsing
+rustymon_world = { version = "~0.1", path = "./rustymon-world" }
 
 [features]
 rorm-main = []
