@@ -1,0 +1,31 @@
+[package]
+name = "rustymon-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Webframework
+actix-web = { version = "~4.2" }
+actix-toolbox = { version = "~0.5" }
+actix-web-actors = { version = "~4.1" }
+
+# Logging facade
+log = { version = "~0.4" }
+
+# Async runtime
+tokio = { version = "~1.23", features = ["rt-multi-thread", "macros", "sync"] }
+
+# ORM
+rorm = { version = "~0.4", features = ["tokio-rustls"] }
+
+# Serialization frameworks
+serde = { version = "~1.0", features = ["derive"] }
+toml = { version = "~0.5" }
+chrono = { version = "~0.4", features = ["serde"]  }
+base64 = { version = "~0.20" }
+
+# CLI parser
+clap = { version = "~4.0", features = ["derive"] }
+
+[features]
+rorm-main = []
