@@ -1,5 +1,3 @@
-use std::io;
-
 use actix_toolbox::tb_middleware::{
     setup_logging_mw, DBSessionStore, LoggingMiddlewareConfig, PersistentSession, SessionMiddleware,
 };
@@ -12,8 +10,13 @@ use rorm::Database;
 
 use crate::models::config::Config;
 
-pub(crate) async fn start_server(db: Database, config: Config) -> Result<(), io::Error> {
-    let key = Key::generate();
+pub(crate) async fn start_server(db: Database, config: Config) -> Result<(), String> {
+    let key = match base64::decode(config.server.secret_key) {
+        Ok(data) => Key::from(&data),
+        Err(err) => {
+            return Err(format!("{err}"));
+        }
+    };
 
     HttpServer::new(move || {
         App::new()
@@ -34,7 +37,9 @@ pub(crate) async fn start_server(db: Database, config: Config) -> Result<(), io:
     .bind((
         config.server.listen_address.as_str(),
         config.server.listen_port,
-    ))?
+    ))
+    .map_err(|e| e.to_string())?
     .run()
     .await
+    .map_err(|e| e.to_string())
 }

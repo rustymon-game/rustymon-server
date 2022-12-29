@@ -6,6 +6,7 @@ use serde::Deserialize;
 pub(crate) struct Server {
     pub(crate) listen_address: String,
     pub(crate) listen_port: u16,
+    pub(crate) secret_key: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
