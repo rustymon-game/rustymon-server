@@ -26,6 +26,13 @@ command = "cargo"
 args = ["build", "-r", "-p", "rustymon-server"]
 workspace = false
 
-[tasks.run]
+[tasks.populate-db]
 command = "cargo"
-args = ["run", "--release"]
+args = [
+    "run", "-r", "-p", "rustymon-server", "--", "parse-osm",
+    "--config-path", "config.toml",
+    "--file", "osm_data/bayern-latest.osm.pbf",
+    "--center-x", "11.5118905",
+    "--center-y", "48.5219287",
+]
+workspace = false

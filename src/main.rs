@@ -1,5 +1,7 @@
+use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::ops::Sub;
+use std::slice;
 
 use actix_toolbox::logging::setup_logging;
 use actix_web::cookie::Key;
@@ -7,11 +9,12 @@ use chrono::Utc;
 use clap::{Parser, Subcommand};
 use futures::{stream, StreamExt};
 use log::{error, info};
+use rorm::internal::field::foreign_model::ForeignModelByField;
 use rorm::{insert, Database, DatabaseConfiguration, DatabaseDriver};
 use rustymon_world::features::prototyping;
 
 use crate::models::config::Config;
-use crate::models::db::TileInsert;
+use crate::models::db::{AreaInsert, NodeInsert, TileInsert, WayInsert};
 use crate::server::start_server;
 
 mod models;
@@ -153,20 +156,130 @@ async fn main() -> Result<(), String> {
             stream::iter(tiles)
                 .chunks(25)
                 .for_each_concurrent(None, |chunk| async {
-                    let db_tiles: Vec<_> = chunk
-                        .into_iter()
-                        .map(|t| TileInsert {
-                            min_x: t.min.x,
-                            min_y: t.min.y,
-                            max_x: t.max.x,
-                            max_y: t.max.y,
-                        })
-                        .collect();
+                    let chunk = chunk;
 
-                    insert!(&db, TileInsert)
-                        .bulk(&db_tiles)
+                    let mut tiles = HashMap::new();
+                    let mut ways = HashMap::new();
+                    let mut nodes = HashMap::new();
+                    let mut areas = HashMap::new();
+
+                    chunk.iter().enumerate().for_each(|(idx, t)| {
+                        tiles.insert(
+                            idx,
+                            TileInsert {
+                                min_x: t.min.x,
+                                min_y: t.min.y,
+                                max_x: t.max.x,
+                                max_y: t.max.y,
+                            },
+                        );
+
+                        t.iter_areas().for_each(|a| {
+                            areas.insert(
+                                idx,
+                                AreaInsert {
+                                    tile: ForeignModelByField::Key(0),
+                                    points: unsafe {
+                                        slice::from_raw_parts(
+                                            a.points.as_ptr() as *const u8,
+                                            a.points.len(),
+                                        )
+                                    }
+                                    .to_vec(),
+                                    features: unsafe {
+                                        slice::from_raw_parts(
+                                            a.feature.as_ptr() as *const u8,
+                                            a.feature.len(),
+                                        )
+                                    }
+                                    .to_vec(),
+                                },
+                            );
+                        });
+
+                        t.iter_nodes().for_each(|n| {
+                            nodes.insert(
+                                idx,
+                                NodeInsert {
+                                    tile: ForeignModelByField::Key(0),
+                                    x: n.points.x,
+                                    y: n.points.y,
+                                    features: unsafe {
+                                        slice::from_raw_parts(
+                                            n.feature.as_ptr() as *const u8,
+                                            n.feature.len(),
+                                        )
+                                    }
+                                    .to_vec(),
+                                },
+                            );
+                        });
+
+                        t.iter_ways().for_each(|w| {
+                            ways.insert(
+                                idx,
+                                WayInsert {
+                                    tile: ForeignModelByField::Key(0),
+                                    points: unsafe {
+                                        slice::from_raw_parts(
+                                            w.points.as_ptr() as *const u8,
+                                            w.points.len(),
+                                        )
+                                    }
+                                    .to_vec(),
+                                    features: unsafe {
+                                        slice::from_raw_parts(
+                                            w.feature.as_ptr() as *const u8,
+                                            w.feature.len(),
+                                        )
+                                    }
+                                    .to_vec(),
+                                },
+                            );
+                        });
+                    });
+
+                    let mut tx = db
+                        .start_transaction()
                         .await
-                        .expect("Failed to insert chunk of tiles");
+                        .expect("Could not start transaction");
+
+                    let tile_ids = insert!(&db, TileInsert)
+                        .transaction(&mut tx)
+                        .bulk(tiles.values())
+                        .await
+                        .expect("Error while creating tiles");
+
+                    tile_ids.into_iter().enumerate().for_each(|(idx, i)| {
+                        if let Some(way) = ways.get_mut(&idx) {
+                            way.tile = ForeignModelByField::Key(i);
+                        }
+                        if let Some(node) = nodes.get_mut(&idx) {
+                            node.tile = ForeignModelByField::Key(i);
+                        }
+                        if let Some(area) = areas.get_mut(&idx) {
+                            area.tile = ForeignModelByField::Key(i);
+                        }
+                    });
+                    insert!(&db, WayInsert)
+                        .transaction(&mut tx)
+                        .bulk(ways.values())
+                        .await
+                        .expect("Error while inserting ways");
+
+                    insert!(&db, NodeInsert)
+                        .transaction(&mut tx)
+                        .bulk(nodes.values())
+                        .await
+                        .expect("Error while inserting ways");
+
+                    insert!(&db, AreaInsert)
+                        .transaction(&mut tx)
+                        .bulk(areas.values())
+                        .await
+                        .expect("Error while inserting ways");
+
+                    tx.commit().await.expect("Could not commit transaction");
                 })
                 .await;
 

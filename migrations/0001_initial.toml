@@ -1,5 +1,5 @@
 [Migration]
-Hash = '13079256831866196346'
+Hash = '14907402141296602420'
 Initial = true
 Replaces = []
 
@@ -47,6 +47,97 @@ Type = 'not_null'
 
 [[Migration.Operations]]
 Type = 'CreateModel'
+Name = 'way'
+
+[[Migration.Operations.Fields]]
+Name = 'id'
+Type = 'int64'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'auto_increment'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'primary_key'
+
+[[Migration.Operations.Fields]]
+Name = 'points'
+Type = 'varbinary'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Fields]]
+Name = 'features'
+Type = 'varbinary'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations]]
+Type = 'CreateModel'
+Name = 'area'
+
+[[Migration.Operations.Fields]]
+Name = 'id'
+Type = 'int64'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'auto_increment'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'primary_key'
+
+[[Migration.Operations.Fields]]
+Name = 'points'
+Type = 'varbinary'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Fields]]
+Name = 'features'
+Type = 'varbinary'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations]]
+Type = 'CreateModel'
+Name = 'node'
+
+[[Migration.Operations.Fields]]
+Name = 'id'
+Type = 'int64'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'auto_increment'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'primary_key'
+
+[[Migration.Operations.Fields]]
+Name = 'x'
+Type = 'double_number'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Fields]]
+Name = 'y'
+Type = 'double_number'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Fields]]
+Name = 'features'
+Type = 'varbinary'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations]]
+Type = 'CreateModel'
 Name = 'session'
 
 [[Migration.Operations.Fields]]
@@ -74,3 +165,63 @@ Type = 'datetime'
 
 [[Migration.Operations.Fields.Annotations]]
 Type = 'not_null'
+
+[[Migration.Operations]]
+Type = 'CreateField'
+Model = 'node'
+
+[Migration.Operations.Field]
+Name = 'tile'
+Type = 'int64'
+
+[[Migration.Operations.Field.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Field.Annotations]]
+Type = 'foreign_key'
+
+[Migration.Operations.Field.Annotations.Value]
+TableName = 'tile'
+ColumnName = 'id'
+OnDelete = 'Restrict'
+OnUpdate = 'Cascade'
+
+[[Migration.Operations]]
+Type = 'CreateField'
+Model = 'way'
+
+[Migration.Operations.Field]
+Name = 'tile'
+Type = 'int64'
+
+[[Migration.Operations.Field.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Field.Annotations]]
+Type = 'foreign_key'
+
+[Migration.Operations.Field.Annotations.Value]
+TableName = 'tile'
+ColumnName = 'id'
+OnDelete = 'Restrict'
+OnUpdate = 'Cascade'
+
+[[Migration.Operations]]
+Type = 'CreateField'
+Model = 'area'
+
+[Migration.Operations.Field]
+Name = 'tile'
+Type = 'int64'
+
+[[Migration.Operations.Field.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Field.Annotations]]
+Type = 'foreign_key'
+
+[Migration.Operations.Field.Annotations.Value]
+TableName = 'tile'
+ColumnName = 'id'
+OnDelete = 'Restrict'
+OnUpdate = 'Cascade'

@@ -12,7 +12,12 @@ use crate::models::config::Config;
 
 pub(crate) async fn start_server(db: Database, config: Config) -> Result<(), String> {
     let key = match base64::decode(config.server.secret_key) {
-        Ok(data) => Key::from(&data),
+        Ok(data) => match Key::try_from(data.as_slice()) {
+            Ok(v) => v,
+            Err(err) => {
+                return Err(format!("Invalid parameter SecretKey: {err}"));
+            }
+        },
         Err(err) => {
             return Err(format!("{err}"));
         }
