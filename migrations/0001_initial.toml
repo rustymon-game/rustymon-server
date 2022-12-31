@@ -1,5 +1,5 @@
 [Migration]
-Hash = '14907402141296602420'
+Hash = '12217452752870275739'
 Initial = true
 Replaces = []
 
@@ -138,7 +138,7 @@ Type = 'not_null'
 
 [[Migration.Operations]]
 Type = 'CreateModel'
-Name = 'session'
+Name = 'dbsession'
 
 [[Migration.Operations.Fields]]
 Name = 'session_key'
@@ -168,7 +168,7 @@ Type = 'not_null'
 
 [[Migration.Operations]]
 Type = 'CreateField'
-Model = 'node'
+Model = 'area'
 
 [Migration.Operations.Field]
 Name = 'tile'
@@ -208,7 +208,7 @@ OnUpdate = 'Cascade'
 
 [[Migration.Operations]]
 Type = 'CreateField'
-Model = 'area'
+Model = 'node'
 
 [Migration.Operations.Field]
 Name = 'tile'

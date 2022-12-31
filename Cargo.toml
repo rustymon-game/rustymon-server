@@ -12,7 +12,7 @@ edition = "2021"
 [dependencies]
 # Webframework
 actix-web = { version = "~4.2" }
-actix-toolbox = { version = "~0.5" }
+actix-toolbox = { version = "~0.6" }
 actix-web-actors = { version = "~4.1" }
 
 # Logging facade
