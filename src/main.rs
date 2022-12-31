@@ -1,26 +1,17 @@
-use std::collections::HashMap;
 use std::fs::read_to_string;
-use std::ops::Sub;
-use std::slice;
 
 use actix_toolbox::logging::setup_logging;
 use actix_web::cookie::Key;
-use chrono::Utc;
 use clap::{Parser, Subcommand};
-use futures::{stream, StreamExt};
 use log::{error, info};
-use rorm::internal::field::foreign_model::ForeignModelByField;
-use rorm::{insert, Database, DatabaseConfiguration, DatabaseDriver};
-use rustymon_world::features::prototyping;
+use rorm::{Database, DatabaseConfiguration, DatabaseDriver};
 
 use crate::models::config::Config;
-use crate::models::db::{AreaInsert, NodeInsert, TileInsert, WayInsert};
 use crate::server::start_server;
 
 mod models;
+mod parse_osm;
 mod server;
-
-const SPAWNS: &str = include_str!("../data/spawns.json");
 
 #[derive(Subcommand)]
 enum Command {
@@ -43,23 +34,26 @@ enum Command {
         file: String,
 
         /// Longitude of center
-        #[clap(long)]
+        #[clap(long, help = "Longitude of center point to use")]
         center_y: f64,
 
         /// Latitude of center
-        #[clap(long)]
+        #[clap(long, help = "Latitude of center point to use")]
         center_x: f64,
 
         /// Number of columns
-        #[clap(short, long, value_parser, default_value_t = 32)]
+        #[clap(long, value_parser, default_value_t = 32)]
+        #[clap(help = "Number of columns to generate")]
         cols: usize,
 
         /// Number of rows
-        #[clap(short, long, value_parser, default_value_t = 32)]
+        #[clap(long, value_parser, default_value_t = 32)]
+        #[clap(help = "Number of rows to generate")]
         rows: usize,
 
         /// Zoom level to produce tiles for
-        #[clap(short, long, default_value_t = 14)]
+        #[clap(long, default_value_t = 14)]
+        #[clap(help = "Zoom level to generate the tiles for")]
         zoom: u8,
     },
 }
@@ -137,155 +131,7 @@ async fn main() -> Result<(), String> {
             let config = get_config(&config_path)?;
             let db = init_db(&config).await?;
 
-            let start = Utc::now();
-
-            let tiles = rustymon_world::parse(rustymon_world::Config {
-                zoom,
-                center_x,
-                center_y,
-                rows,
-                cols,
-                file,
-                visual: prototyping::Parser::from_file(SPAWNS).unwrap(),
-            })?;
-
-            let after_osm = Utc::now();
-
-            println!("After OSM: {}", after_osm.sub(start));
-
-            stream::iter(tiles)
-                .chunks(25)
-                .for_each_concurrent(None, |chunk| async {
-                    let chunk = chunk;
-
-                    let mut tiles = HashMap::new();
-                    let mut ways = HashMap::new();
-                    let mut nodes = HashMap::new();
-                    let mut areas = HashMap::new();
-
-                    chunk.iter().enumerate().for_each(|(idx, t)| {
-                        tiles.insert(
-                            idx,
-                            TileInsert {
-                                min_x: t.min.x,
-                                min_y: t.min.y,
-                                max_x: t.max.x,
-                                max_y: t.max.y,
-                            },
-                        );
-
-                        t.iter_areas().for_each(|a| {
-                            areas.insert(
-                                idx,
-                                AreaInsert {
-                                    tile: ForeignModelByField::Key(0),
-                                    points: unsafe {
-                                        slice::from_raw_parts(
-                                            a.points.as_ptr() as *const u8,
-                                            a.points.len(),
-                                        )
-                                    }
-                                    .to_vec(),
-                                    features: unsafe {
-                                        slice::from_raw_parts(
-                                            a.feature.as_ptr() as *const u8,
-                                            a.feature.len(),
-                                        )
-                                    }
-                                    .to_vec(),
-                                },
-                            );
-                        });
-
-                        t.iter_nodes().for_each(|n| {
-                            nodes.insert(
-                                idx,
-                                NodeInsert {
-                                    tile: ForeignModelByField::Key(0),
-                                    x: n.points.x,
-                                    y: n.points.y,
-                                    features: unsafe {
-                                        slice::from_raw_parts(
-                                            n.feature.as_ptr() as *const u8,
-                                            n.feature.len(),
-                                        )
-                                    }
-                                    .to_vec(),
-                                },
-                            );
-                        });
-
-                        t.iter_ways().for_each(|w| {
-                            ways.insert(
-                                idx,
-                                WayInsert {
-                                    tile: ForeignModelByField::Key(0),
-                                    points: unsafe {
-                                        slice::from_raw_parts(
-                                            w.points.as_ptr() as *const u8,
-                                            w.points.len(),
-                                        )
-                                    }
-                                    .to_vec(),
-                                    features: unsafe {
-                                        slice::from_raw_parts(
-                                            w.feature.as_ptr() as *const u8,
-                                            w.feature.len(),
-                                        )
-                                    }
-                                    .to_vec(),
-                                },
-                            );
-                        });
-                    });
-
-                    let mut tx = db
-                        .start_transaction()
-                        .await
-                        .expect("Could not start transaction");
-
-                    let tile_ids = insert!(&db, TileInsert)
-                        .transaction(&mut tx)
-                        .bulk(tiles.values())
-                        .await
-                        .expect("Error while creating tiles");
-
-                    tile_ids.into_iter().enumerate().for_each(|(idx, i)| {
-                        if let Some(way) = ways.get_mut(&idx) {
-                            way.tile = ForeignModelByField::Key(i);
-                        }
-                        if let Some(node) = nodes.get_mut(&idx) {
-                            node.tile = ForeignModelByField::Key(i);
-                        }
-                        if let Some(area) = areas.get_mut(&idx) {
-                            area.tile = ForeignModelByField::Key(i);
-                        }
-                    });
-                    insert!(&db, WayInsert)
-                        .transaction(&mut tx)
-                        .bulk(ways.values())
-                        .await
-                        .expect("Error while inserting ways");
-
-                    insert!(&db, NodeInsert)
-                        .transaction(&mut tx)
-                        .bulk(nodes.values())
-                        .await
-                        .expect("Error while inserting ways");
-
-                    insert!(&db, AreaInsert)
-                        .transaction(&mut tx)
-                        .bulk(areas.values())
-                        .await
-                        .expect("Error while inserting ways");
-
-                    tx.commit().await.expect("Could not commit transaction");
-                })
-                .await;
-
-            println!("DB Insert: {}", Utc::now().sub(after_osm));
-
-            Ok(())
+            parse_osm::parse_osm(db, file, cols, rows, center_x, center_y, zoom).await
         }
     }
 }
