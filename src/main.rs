@@ -20,6 +20,14 @@ mod models;
 mod parse_osm;
 mod server;
 
+const LOGO: &str = r#" ______
+|  ___ \            _
+| |___) |_   _  ___| |_ _   _ ____   ___  ____
+|  __  /| | | |/___)  _) | | |    \ / _ \|  _ \
+| |  \ \\ |_| |___ | |_| |_| | | | | |_| | | | |
+|_|   \_|\____(___/ \___)__  |_|_|_|\___/|_| |_|
+                       (____/   & a bunch of other languages"#;
+
 #[derive(Subcommand)]
 enum Command {
     Start {
@@ -103,6 +111,8 @@ async fn main() -> Result<(), String> {
 
     match cli.command {
         Command::Start { config_path } => {
+            println!("\n{}\n", LOGO);
+
             let config = get_config(&config_path)?;
             setup_logging(&config.logging)?;
 
