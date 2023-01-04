@@ -1,14 +1,21 @@
+#![cfg_attr(
+    feature = "rorm-main",
+    allow(unused_variables, unused_imports, dead_code)
+)]
+
 use std::fs::read_to_string;
 
 use actix_toolbox::logging::setup_logging;
 use actix_web::cookie::Key;
 use clap::{Parser, Subcommand};
-use log::{error, info};
+use log::{error, info, LevelFilter};
 use rorm::{Database, DatabaseConfiguration, DatabaseDriver};
 
 use crate::models::config::Config;
 use crate::server::start_server;
 
+mod handler;
+mod helper;
 mod models;
 mod parse_osm;
 mod server;
@@ -80,10 +87,10 @@ async fn init_db(config: &Config) -> Result<Database, String> {
             password: config.database.password.clone(),
         },
         max_connections: 20,
-        min_connections: 2,
+        min_connections: 4,
         disable_logging: None,
         slow_statement_log_level: None,
-        statement_log_level: None,
+        statement_log_level: Some(LevelFilter::Off),
     })
     .await
     .map_err(|e| format!("{e}"))

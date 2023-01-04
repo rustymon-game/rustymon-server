@@ -1,7 +1,54 @@
 [Migration]
-Hash = '12217452752870275739'
+Hash = '4162248143107957517'
 Initial = true
 Replaces = []
+
+[[Migration.Operations]]
+Type = 'CreateModel'
+Name = 'user'
+
+[[Migration.Operations.Fields]]
+Name = 'username'
+Type = 'varchar'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'max_length'
+Value = 255
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'primary_key'
+
+[[Migration.Operations.Fields]]
+Name = 'display_name'
+Type = 'varchar'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'max_length'
+Value = 255
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Fields]]
+Name = 'password_hash'
+Type = 'varchar'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'max_length'
+Value = 1024
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
+
+[[Migration.Operations.Fields]]
+Name = 'created_at'
+Type = 'datetime'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'auto_create_time'
+
+[[Migration.Operations.Fields.Annotations]]
+Type = 'not_null'
 
 [[Migration.Operations]]
 Type = 'CreateModel'

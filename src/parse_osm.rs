@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::slice;
+use std::{mem, slice};
 
 use rorm::internal::field::foreign_model::ForeignModelByField;
 use rorm::{insert, Database};
@@ -50,11 +50,17 @@ pub(crate) async fn parse_osm(
                 AreaInsert {
                     tile: ForeignModelByField::Key(0),
                     points: unsafe {
-                        slice::from_raw_parts(a.points.as_ptr() as *const u8, a.points.len())
+                        slice::from_raw_parts(
+                            a.points.as_ptr() as *const u8,
+                            a.points.len() * mem::size_of::<(f64, f64)>(),
+                        )
                     }
                     .to_vec(),
                     features: unsafe {
-                        slice::from_raw_parts(a.feature.as_ptr() as *const u8, a.feature.len())
+                        slice::from_raw_parts(
+                            a.feature.as_ptr() as *const u8,
+                            a.feature.len() * mem::size_of::<(u32, u32)>(),
+                        )
                     }
                     .to_vec(),
                 },
@@ -69,7 +75,10 @@ pub(crate) async fn parse_osm(
                     x: n.points.x,
                     y: n.points.y,
                     features: unsafe {
-                        slice::from_raw_parts(n.feature.as_ptr() as *const u8, n.feature.len())
+                        slice::from_raw_parts(
+                            n.feature.as_ptr() as *const u8,
+                            n.feature.len() * mem::size_of::<(u32, u32)>(),
+                        )
                     }
                     .to_vec(),
                 },
@@ -82,11 +91,17 @@ pub(crate) async fn parse_osm(
                 WayInsert {
                     tile: ForeignModelByField::Key(0),
                     points: unsafe {
-                        slice::from_raw_parts(w.points.as_ptr() as *const u8, w.points.len())
+                        slice::from_raw_parts(
+                            w.points.as_ptr() as *const u8,
+                            w.points.len() * mem::size_of::<(f64, f64)>(),
+                        )
                     }
                     .to_vec(),
                     features: unsafe {
-                        slice::from_raw_parts(w.feature.as_ptr() as *const u8, w.feature.len())
+                        slice::from_raw_parts(
+                            w.feature.as_ptr() as *const u8,
+                            w.feature.len() * mem::size_of::<(u32, u32)>(),
+                        )
                     }
                     .to_vec(),
                 },

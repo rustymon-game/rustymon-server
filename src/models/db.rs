@@ -1,4 +1,18 @@
 use rorm::{ForeignModel, Model, Patch};
+use serde::{Deserialize, Serialize};
+
+#[derive(Model, Serialize, Deserialize)]
+pub(crate) struct User {
+    #[rorm(primary_key, max_length = 255)]
+    pub(crate) username: String,
+    #[rorm(max_length = 255)]
+    pub(crate) display_name: String,
+    #[rorm(max_length = 1024)]
+    pub(crate) password_hash: String,
+
+    #[rorm(auto_create_time)]
+    pub(crate) created_at: chrono::NaiveDateTime,
+}
 
 #[derive(Model)]
 pub(crate) struct Tile {

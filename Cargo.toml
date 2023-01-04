@@ -15,6 +15,9 @@ actix-web = { version = "~4.2" }
 actix-toolbox = { version = "~0.6" }
 actix-web-actors = { version = "~4.1" }
 
+# Hashing algorithm
+argon2 = { version = "~0.4" }
+
 # Logging facade
 log = { version = "~0.4" }
 
@@ -27,6 +30,7 @@ rorm = { version = "~0.4", features = ["tokio-rustls"] }
 
 # Serialization frameworks
 serde = { version = "~1.0", features = ["derive"] }
+serde_repr = { version = "~0.1" }
 toml = { version = "~0.5" }
 chrono = { version = "~0.4", features = ["serde"]  }
 base64 = { version = "~0.20" }
