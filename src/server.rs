@@ -6,6 +6,8 @@ use actix_web::cookie::Key;
 use actix_web::middleware::Compress;
 use actix_web::web::{get, post, scope, Data, JsonConfig, PayloadConfig};
 use actix_web::{App, HttpServer};
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use rorm::Database;
 
 use crate::handler::frontend;
@@ -13,7 +15,7 @@ use crate::helper::AuthenticationRequired;
 use crate::models::config::Config;
 
 pub(crate) async fn start_server(db: Database, config: Config) -> Result<(), String> {
-    let key = match base64::decode(config.server.secret_key) {
+    let key = match BASE64_STANDARD.decode(config.server.secret_key) {
         Ok(data) => match Key::try_from(data.as_slice()) {
             Ok(v) => v,
             Err(err) => {

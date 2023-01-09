@@ -12,8 +12,7 @@ edition = "2021"
 [dependencies]
 # Webframework
 actix-web = { version = "~4.2" }
-actix-toolbox = { version = "~0.7" }
-actix-web-actors = { version = "~4.1" }
+actix-toolbox = { version = "~0.8", features = ["ws", "session", "logging"] }
 
 # Hashing algorithm
 argon2 = { version = "~0.4" }
@@ -22,7 +21,7 @@ argon2 = { version = "~0.4" }
 log = { version = "~0.4" }
 
 # Async runtime
-tokio = { version = "~1.23", features = ["rt-multi-thread", "macros", "sync"] }
+tokio = { version = "~1.24", features = ["rt-multi-thread", "macros", "sync"] }
 futures = { version = "~0.3" }
 
 # ORM
@@ -32,8 +31,8 @@ rorm = { version = "~0.4", features = ["tokio-rustls"] }
 serde = { version = "~1.0", features = ["derive"] }
 serde_repr = { version = "~0.1" }
 toml = { version = "~0.5" }
-chrono = { version = "~0.4", features = ["serde"]  }
-base64 = { version = "~0.20" }
+chrono = { version = ">=0.4.20", features = ["serde"]  }
+base64 = { version = "~0.21" }
 
 # CLI parser
 clap = { version = "~4.0", features = ["derive"] }

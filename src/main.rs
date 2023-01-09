@@ -7,6 +7,8 @@ use std::fs::read_to_string;
 
 use actix_toolbox::logging::setup_logging;
 use actix_web::cookie::Key;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use clap::{Parser, Subcommand};
 use log::{error, info, LevelFilter};
 use rorm::{Database, DatabaseConfiguration, DatabaseDriver};
@@ -132,7 +134,7 @@ async fn main() -> Result<(), String> {
         Command::GenKey => {
             let key = Key::generate();
             println!("Generated key:");
-            println!("{}", base64::encode(key.master()));
+            println!("{}", BASE64_STANDARD.encode(key.master()));
 
             Ok(())
         }
