@@ -21,6 +21,7 @@ mod helper;
 mod models;
 mod parse_osm;
 mod server;
+mod world;
 
 const LOGO: &str = r#" ______
 |  ___ \            _

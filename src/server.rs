@@ -10,9 +10,10 @@ use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use rorm::Database;
 
-use crate::handler::frontend;
+use crate::handler::{frontend, world};
 use crate::helper::AuthenticationRequired;
 use crate::models::config::Config;
+use crate::world::OSMTags;
 
 pub(crate) async fn start_server(db: Database, config: Config) -> Result<(), String> {
     let key = match BASE64_STANDARD.decode(config.server.secret_key) {
@@ -30,6 +31,8 @@ pub(crate) async fn start_server(db: Database, config: Config) -> Result<(), Str
         }
     };
 
+    let tags_lookup = Data::new(OSMTags::new());
+
     HttpServer::new(move || {
         App::new()
             .wrap(
@@ -43,9 +46,11 @@ pub(crate) async fn start_server(db: Database, config: Config) -> Result<(), Str
             )
             .wrap(Compress::default())
             .wrap(setup_logging_mw(LoggingMiddlewareConfig::default()))
+            .app_data(tags_lookup.clone())
             .app_data(JsonConfig::default())
             .app_data(PayloadConfig::default())
             .app_data(Data::new(db.clone()))
+            .route("/api/world/v1/getOsmTags", get().to(world::get_osm_tags))
             .route("/api/frontend/v1/login", post().to(frontend::login))
             .service(
                 scope("/api/frontend/v1")

@@ -30,6 +30,7 @@ rorm = { version = "~0.4", features = ["tokio-rustls"] }
 # Serialization frameworks
 serde = { version = "~1.0", features = ["derive"] }
 serde_repr = { version = "~0.1" }
+serde_json = { version = "~1.0" }
 toml = { version = "~0.5" }
 chrono = { version = ">=0.4.20", features = ["serde"]  }
 base64 = { version = "~0.21" }
@@ -39,6 +40,7 @@ clap = { version = "~4.0", features = ["derive"] }
 
 # OSM parsing
 rustymon_world = { version = "~0.1", path = "./rustymon-world" }
+linear-map = { version = "1.2", features= ["serde_impl"] }
 
 [features]
 rorm-main = []

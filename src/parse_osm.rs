@@ -1,13 +1,11 @@
 use std::collections::HashMap;
-use std::{mem, slice};
 
 use rorm::internal::field::foreign_model::ForeignModelByField;
 use rorm::{insert, Database};
 use rustymon_world::features::prototyping;
 
 use crate::models::db::{AreaInsert, NodeInsert, TileInsert, WayInsert};
-
-const SPAWNS: &str = include_str!("../data/spawns.json");
+use crate::world::{bytes_from_slice, TAGS_FILE};
 
 pub(crate) async fn parse_osm(
     db: Database,
@@ -25,7 +23,7 @@ pub(crate) async fn parse_osm(
         rows,
         cols,
         file,
-        visual: prototyping::Parser::from_file(SPAWNS).unwrap(),
+        visual: prototyping::Parser::from_file(TAGS_FILE).unwrap(),
     })?;
 
     let mut tiles = HashMap::new();
@@ -49,20 +47,8 @@ pub(crate) async fn parse_osm(
                 idx,
                 AreaInsert {
                     tile: ForeignModelByField::Key(0),
-                    points: unsafe {
-                        slice::from_raw_parts(
-                            a.points.as_ptr() as *const u8,
-                            a.points.len() * mem::size_of::<(f64, f64)>(),
-                        )
-                    }
-                    .to_vec(),
-                    features: unsafe {
-                        slice::from_raw_parts(
-                            a.feature.as_ptr() as *const u8,
-                            a.feature.len() * mem::size_of::<(u32, u32)>(),
-                        )
-                    }
-                    .to_vec(),
+                    points: unsafe { bytes_from_slice(a.points) }.to_vec(),
+                    features: unsafe { bytes_from_slice(a.feature) }.to_vec(),
                 },
             );
         });
@@ -74,13 +60,7 @@ pub(crate) async fn parse_osm(
                     tile: ForeignModelByField::Key(0),
                     x: n.points.x,
                     y: n.points.y,
-                    features: unsafe {
-                        slice::from_raw_parts(
-                            n.feature.as_ptr() as *const u8,
-                            n.feature.len() * mem::size_of::<(u32, u32)>(),
-                        )
-                    }
-                    .to_vec(),
+                    features: unsafe { bytes_from_slice(n.feature) }.to_vec(),
                 },
             );
         });
@@ -90,20 +70,8 @@ pub(crate) async fn parse_osm(
                 idx,
                 WayInsert {
                     tile: ForeignModelByField::Key(0),
-                    points: unsafe {
-                        slice::from_raw_parts(
-                            w.points.as_ptr() as *const u8,
-                            w.points.len() * mem::size_of::<(f64, f64)>(),
-                        )
-                    }
-                    .to_vec(),
-                    features: unsafe {
-                        slice::from_raw_parts(
-                            w.feature.as_ptr() as *const u8,
-                            w.feature.len() * mem::size_of::<(u32, u32)>(),
-                        )
-                    }
-                    .to_vec(),
+                    points: unsafe { bytes_from_slice(w.points) }.to_vec(),
+                    features: unsafe { bytes_from_slice(w.feature) }.to_vec(),
                 },
             );
         });
