@@ -68,7 +68,6 @@ impl WayInsert {
         unsafe {
             Self {
                 tile: ForeignModel::Key(tile),
-                oid: way.oid as i64,
                 points: bytes_from_slice(way.points).to_vec(),
                 features: bytes_from_slice(way.feature).to_vec(),
             }
@@ -99,7 +98,6 @@ impl AreaInsert {
         unsafe {
             Self {
                 tile: ForeignModel::Key(tile),
-                oid: area.oid as i64,
                 points: bytes_from_slice(area.points).to_vec(),
                 features: bytes_from_slice(area.feature).to_vec(),
             }
@@ -134,7 +132,6 @@ impl NodeInsert {
         unsafe {
             Self {
                 tile: ForeignModel::Key(tile),
-                oid: node.oid as i64,
                 x: node.points.x,
                 y: node.points.y,
                 features: bytes_from_slice(node.feature).to_vec(),

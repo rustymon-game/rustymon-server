@@ -11,7 +11,7 @@ use crate::models::db::{Area, Node, Tile, Way};
 
 pub const ZOOM: u8 = 14;
 pub static PROJECTION: projection::WebMercator = projection::WebMercator;
-pub static TAGS_FILE: &'static str = include_str!("../../data/spawns.json");
+pub static TAGS_FILE: &str = include_str!("../../data/spawns.json");
 
 pub struct OSMTags(Vec<(&'static str, Vec<&'static str>)>);
 impl Default for OSMTags {
@@ -60,20 +60,20 @@ pub fn tile_condition<'a>(point: Point) -> impl Condition<'a> {
     )
 }
 
-const NODE_DISTANCE: f64 = 0.0;
-const WAY_DISTANCE: f64 = 0.0;
+const NODE_DISTANCE: f64 = 0.0000003;
+const WAY_DISTANCE: f64 = 0.0000003;
 
 pub async fn get_osm_tags(db: &Database, coord: &Coord) -> Result<HashSet<[u32; 2]>, rorm::Error> {
     let point = PROJECTION.project_nalgebra(Point::new(coord.lng, coord.lat));
 
-    let tiles = query!(&db, Tile)
+    let tiles = query!(db, Tile)
         .condition(tile_condition(point))
         .all()
         .await?;
 
     let mut tags = HashSet::new();
     for tile in tiles {
-        for area in query!(&db, Area)
+        for area in query!(db, Area)
             .condition(Area::F.tile.equals(tile.id))
             .all()
             .await?
@@ -83,7 +83,7 @@ pub async fn get_osm_tags(db: &Database, coord: &Coord) -> Result<HashSet<[u32; 
             }
         }
 
-        for node in query!(&db, Node)
+        for node in query!(db, Node)
             .condition(Node::F.tile.equals(tile.id))
             .all()
             .await?
@@ -93,7 +93,7 @@ pub async fn get_osm_tags(db: &Database, coord: &Coord) -> Result<HashSet<[u32; 
             }
         }
 
-        for way in query!(&db, Way)
+        for way in query!(db, Way)
             .condition(Way::F.tile.equals(tile.id))
             .all()
             .await?
