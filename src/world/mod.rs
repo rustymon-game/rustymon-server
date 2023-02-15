@@ -1,16 +1,16 @@
 use std::collections::{HashMap, HashSet};
 
 use linear_map::LinearMap;
-use log::info;
 use rorm::conditions::Condition;
-use rorm::Model;
-use rorm::{and, query, Database};
+use rorm::{and, query, Database, Model};
 use rustymon_world::geometry::{polygon, polyline, Point};
-use rustymon_world::projection::{Projection, Simple};
+use rustymon_world::projection::{self, Projection};
 use serde::Deserialize;
 
 use crate::models::db::{Area, Node, Tile, Way};
 
+pub const ZOOM: u8 = 14;
+pub static PROJECTION: projection::WebMercator = projection::WebMercator;
 pub static TAGS_FILE: &'static str = include_str!("../../data/spawns.json");
 
 pub struct OSMTags(Vec<(&'static str, Vec<&'static str>)>);
@@ -60,24 +60,11 @@ pub fn tile_condition<'a>(point: Point) -> impl Condition<'a> {
     )
 }
 
-const NODE_DISTANCE: f64 = 1.0;
-const WAY_DISTANCE: f64 = 1.0;
-
-pub unsafe fn slice_from_bytes<T>(bytes: &[u8]) -> &[T] {
-    std::slice::from_raw_parts(
-        bytes.as_ptr() as *const T,
-        bytes.len() / std::mem::size_of::<T>(),
-    )
-}
-pub unsafe fn bytes_from_slice<T>(bytes: &[T]) -> &[u8] {
-    std::slice::from_raw_parts(
-        bytes.as_ptr() as *const u8,
-        bytes.len() * std::mem::size_of::<T>(),
-    )
-}
+const NODE_DISTANCE: f64 = 0.0;
+const WAY_DISTANCE: f64 = 0.0;
 
 pub async fn get_osm_tags(db: &Database, coord: &Coord) -> Result<HashSet<[u32; 2]>, rorm::Error> {
-    let point = Simple.project_nalgebra(Point::new(coord.lng, coord.lat));
+    let point = PROJECTION.project_nalgebra(Point::new(coord.lng, coord.lat));
 
     let tiles = query!(&db, Tile)
         .condition(tile_condition(point))
@@ -91,10 +78,8 @@ pub async fn get_osm_tags(db: &Database, coord: &Coord) -> Result<HashSet<[u32; 
             .all()
             .await?
         {
-            let points = unsafe { slice_from_bytes(&area.points) };
-            if polygon::contains_point(points, point) {
-                let features = unsafe { slice_from_bytes::<[u32; 2]>(&area.features) };
-                tags.extend(features.iter().copied());
+            if polygon::contains_point(area.points(), point) {
+                tags.extend(area.features().iter().copied());
             }
         }
 
@@ -104,8 +89,7 @@ pub async fn get_osm_tags(db: &Database, coord: &Coord) -> Result<HashSet<[u32; 
             .await?
         {
             if point.metric_distance(&Point::new(node.x, node.y)) < NODE_DISTANCE {
-                let features = unsafe { slice_from_bytes::<[u32; 2]>(&node.features) };
-                tags.extend(features.iter().copied());
+                tags.extend(node.features().iter().copied());
             }
         }
 
@@ -114,10 +98,8 @@ pub async fn get_osm_tags(db: &Database, coord: &Coord) -> Result<HashSet<[u32; 
             .all()
             .await?
         {
-            let points = unsafe { slice_from_bytes(&way.points) };
-            if polyline::distance_to(points, point) < WAY_DISTANCE {
-                let features = unsafe { slice_from_bytes::<[u32; 2]>(&way.features) };
-                tags.extend(features.iter().copied());
+            if polyline::distance_to(way.points(), point) < WAY_DISTANCE {
+                tags.extend(way.features().iter().copied());
             }
         }
     }

@@ -68,11 +68,6 @@ enum Command {
         #[clap(long, value_parser, default_value_t = 32)]
         #[clap(help = "Number of rows to generate")]
         rows: usize,
-
-        /// Zoom level to produce tiles for
-        #[clap(long, default_value_t = 14)]
-        #[clap(help = "Zoom level to generate the tiles for")]
-        zoom: u8,
     },
 }
 
@@ -145,13 +140,12 @@ async fn main() -> Result<(), String> {
             rows,
             center_x,
             center_y,
-            zoom,
             config_path,
         } => {
             let config = get_config(&config_path)?;
             let db = init_db(&config).await?;
 
-            parse_osm::parse_osm(db, file, cols, rows, center_x, center_y, zoom).await
+            parse_osm::parse_osm(db, file, cols, rows, center_x, center_y).await
         }
     }
 }
